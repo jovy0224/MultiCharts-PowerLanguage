@@ -1,13 +1,19 @@
-if time=0915 then value1=opend(0);
+if date<>date[1] then value1=0;
 
-if time>=0915 and time<1300 then begin
-buy next bar value1+30 stop;
-sellshort next bar value1-30 stop;
+//用 time>=0915 搭配 value1=0 當旗標，避免資料剛好沒有 09:15 那一根K棒時
+//value1 整天停在 0，讓下面的停損單價位變成 0+30 / 0-30 這種離譜的價位。
+if value1=0 and time>=0915 then value1=opend(0);
+
+//加上 marketposition=0，原本每根K棒都會重複送出進場單，
+//若已經有多單還會再送一次空單（等於每根都在嘗試翻倉/加倉）。
+if marketposition=0 and time>=0915 and time<1300 then begin
+buy("BO_Long") next bar value1+30 stop;
+sellshort("BO_Short") next bar value1-30 stop;
 end;
 
 if time>=1300 then begin
-buytocover next bar market;
-sell next bar market;
+buytocover("EOD_Short") next bar market;
+sell("EOD_Long") next bar market;
 end;
 
 setstoploss(40*bigpointvalue);

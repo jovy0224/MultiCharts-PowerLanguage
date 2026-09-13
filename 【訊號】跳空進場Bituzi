@@ -11,7 +11,10 @@ if date <> date[1] then begin
         TLow=99999;
 end;
 
-if time=BTime then begin
+//用 time>=BTime 搭配 THigh=0 當「今天還沒設定過」的旗標，
+//避免資料剛好沒有 BTime 那一根K棒時，THigh/TLow 整天都停在初始值 0 / 99999，
+//導致 close>Thigh、close<TLow 形同虛設（永遠成立）。
+if THigh=0 and time>=BTime then begin
         THigh=highd(0);
         TLow=lowd(0);
 end;
