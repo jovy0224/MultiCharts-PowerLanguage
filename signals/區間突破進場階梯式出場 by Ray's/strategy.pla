@@ -1,4 +1,4 @@
-inputs: N(12);
+inputs: N(12), EODBars(55);
 vars: kh(0), k1(0), Kbar(0), buyexit(0);
 
 if date<>date[1] then begin
@@ -13,7 +13,7 @@ end;
 //可以改成STOP進單
 if Kbar>N then begin
   if close crosses above kh and k1<1 then begin
-    buy next bar at market;
+    buy("BO_Long") next bar at market;
     //---red word
     buyexit = lowest(low,2);
     //---
@@ -22,19 +22,23 @@ if Kbar>N then begin
 end;
 
 //---red word
-if highest(high,barsSinceEntry(0)) > highest(high,barsSinceEntry(0))[1] then
+//加上 marketposition>0 保護：還沒進場過時 barsSinceEntry(0) 是 -1，
+//直接拿去當 highest() 的期數參數會出錯，所以只在持有多單時才更新這段移動出場價。
+if marketposition>0 and highest(high,barsSinceEntry(0)) > highest(high,barsSinceEntry(0))[1] then
   buyexit = lowest(low,2);
 //---
 //利用barsSiceEntry來看進場後是否有創新高，如果有把buyexit值用當根及前一根低點比較，最低的丟進去。
 
 //出場也可以改成sell next bar at buyexit stop;
 if marketposition>0 and close<buyexit then begin
-  sell next bar at market;
-  k1 = K1+1;
+  sell("Trail_Exit") next bar at market;
+  k1 = k1+1;
 end;
 
-if Kbar>55 then begin
-  sell next bar at market;
+//以固定根數當作強制平倉；若當天K棒數不到 EODBars 這段就不會觸發，
+//比較穩健的做法是改成 time>=收盤前某時間，這裡先保留原始以根數計算的邏輯。
+if Kbar>EODBars then begin
+  sell("EOD_Exit") next bar at market;
   k1 = 0;
   kh = 99999;
 end;

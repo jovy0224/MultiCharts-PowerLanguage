@@ -1,4 +1,4 @@
-inputs: Price(close), Len_Short(9), Len_Long(10);
+inputs: Len_Short(9), Len_Long(10), StopLossPct(0.02);
 vars: var1(0), var2(0);
 
 var1= SlowK(Len_Short);
@@ -19,3 +19,11 @@ end;
 if marketposition<0 and var1 Crosses Above var2 then begin
 buytocover("EXIT_sell") next bar at market;
 end;
+
+//原始版本沒有任何停損，兩次交叉之間完全沒有風險控制，
+//在單邊趨勢中反向單邊的浮虧可能會拖很久，這裡補上一個基本的百分比停損。
+if marketposition>0 then
+sell("SL_Long") next bar at entryprice*(1-StopLossPct) stop;
+
+if marketposition<0 then
+buytocover("SL_Short") next bar at entryprice*(1+StopLossPct) stop;
